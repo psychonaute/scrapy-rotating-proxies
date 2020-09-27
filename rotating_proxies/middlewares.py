@@ -127,7 +127,7 @@ class RotatingProxyMiddleware(object):
             self.reanimate_task.stop()
 
     def process_request(self, request, spider):
-        if 'proxy' in request.meta and not request.meta.get('_rotating_proxy'):
+        if 'proxy' in request.meta.get('splash', {}).get('args', {}) and not request.meta.get('_rotating_proxy'):
             return
         proxy = self.proxies.get_random()
         if not proxy:
@@ -142,8 +142,10 @@ class RotatingProxyMiddleware(object):
                     logger.error("No proxies available even after a reset.")
                     raise CloseSpider("no_proxies_after_reset")
 
-        request.meta['proxy'] = proxy
-        request.meta['download_slot'] = self.get_proxy_slot(proxy)
+        # request.meta['proxy'] = proxy
+        if request.meta.get('splash', {}).get('args', {}).get('proxy', None):
+            request.meta['splash']['args']['proxy'] = proxy
+        # request.meta['download_slot'] = self.get_proxy_slot(proxy)
         request.meta['_rotating_proxy'] = True
 
     def get_proxy_slot(self, proxy):
@@ -162,7 +164,8 @@ class RotatingProxyMiddleware(object):
         return self._handle_result(request, spider) or response
 
     def _handle_result(self, request, spider):
-        proxy = self.proxies.get_proxy(request.meta.get('proxy', None))
+        proxy = self.proxies.get_proxy(request.meta.get('splash', {}).get('args', {}).get('proxy', None))
+        # proxy = self.proxies.get_proxy(request.meta.get('proxy', None))
         if not (proxy and request.meta.get('_rotating_proxy')):
             return
         self.stats.set_value('proxies/unchecked', len(self.proxies.unchecked) - len(self.proxies.reanimated))
