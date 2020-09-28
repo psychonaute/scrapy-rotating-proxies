@@ -145,7 +145,9 @@ class RotatingProxyMiddleware(object):
         # request.meta['proxy'] = proxy
         if request.meta.get('splash', {}).get('args', {}).get('proxy', None):
             request.meta['splash']['args']['proxy'] = proxy
-        # request.meta['download_slot'] = self.get_proxy_slot(proxy)
+        else:
+            request.meta['proxy'] = proxy
+            request.meta['download_slot'] = self.get_proxy_slot(proxy)
         request.meta['_rotating_proxy'] = True
 
     def get_proxy_slot(self, proxy):
@@ -164,8 +166,11 @@ class RotatingProxyMiddleware(object):
         return self._handle_result(request, spider) or response
 
     def _handle_result(self, request, spider):
-        proxy = self.proxies.get_proxy(request.meta.get('splash', {}).get('args', {}).get('proxy', None))
-        # proxy = self.proxies.get_proxy(request.meta.get('proxy', None))
+        if request.meta.get('splash', None):
+            req_proxy = self.proxies.get_proxy(request.meta.get('splash', {}).get('args', {}).get('proxy', None))
+        else:
+            req_proxy = request.meta.get('proxy', None)
+        proxy = self.proxies.get_proxy(req_proxy)
         if not (proxy and request.meta.get('_rotating_proxy')):
             return
         self.stats.set_value('proxies/unchecked', len(self.proxies.unchecked) - len(self.proxies.reanimated))
