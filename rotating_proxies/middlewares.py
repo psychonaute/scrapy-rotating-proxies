@@ -127,6 +127,9 @@ class RotatingProxyMiddleware(object):
             self.reanimate_task.stop()
 
     def process_request(self, request, spider):
+        if 'proxy' in request.meta and not request.meta.get('_rotating_proxy'):
+            return
+        # added test to use in combination of with scrapy-splash: https://github.com/scrapy-plugins/scrapy-splash
         if 'proxy' in request.meta.get('splash', {}).get('args', {}) and not request.meta.get('_rotating_proxy'):
             return
         proxy = self.proxies.get_random()
@@ -142,8 +145,9 @@ class RotatingProxyMiddleware(object):
                     logger.error("No proxies available even after a reset.")
                     raise CloseSpider("no_proxies_after_reset")
 
-        # request.meta['proxy'] = proxy
-        if request.meta.get('splash', {}).get('args', {}).get('proxy', None):
+        
+        # added test to use in combination of with scrapy-splash: https://github.com/scrapy-plugins/scrapy-splash
+        if request.meta.get('splash', {}).get('args', {}):
             request.meta['splash']['args']['proxy'] = proxy
         else:
             request.meta['proxy'] = proxy
@@ -166,6 +170,7 @@ class RotatingProxyMiddleware(object):
         return self._handle_result(request, spider) or response
 
     def _handle_result(self, request, spider):
+        # added test to use in combination of with scrapy-splash: https://github.com/scrapy-plugins/scrapy-splash
         if request.meta.get('splash', None):
             req_proxy = self.proxies.get_proxy(request.meta.get('splash', {}).get('args', {}).get('proxy', None))
         else:
