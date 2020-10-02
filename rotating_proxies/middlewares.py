@@ -5,7 +5,7 @@ import codecs
 from functools import partial
 from six.moves.urllib.parse import urlsplit
 
-from scrapy.exceptions import CloseSpider, NotConfigured
+from scrapy.exceptions import CloseSpider, NotConfigured, IgnoreRequest
 from scrapy import signals
 from scrapy.utils.misc import load_object
 from scrapy.utils.url import add_http_if_no_scheme
@@ -211,6 +211,7 @@ class RotatingProxyMiddleware(object):
                          "times with different proxies)",
                          {'request': request, 'retries': retries},
                          extra={'spider': spider})
+            raise IgnoreRequest
 
     def log_stats(self):
         logger.info('%s' % self.proxies)
