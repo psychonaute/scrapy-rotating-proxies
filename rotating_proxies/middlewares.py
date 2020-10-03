@@ -211,7 +211,7 @@ class RotatingProxyMiddleware(object):
                          "times with different proxies)",
                          {'request': request, 'retries': retries},
                          extra={'spider': spider})
-            raise IgnoreRequest
+            raise IgnoreRequest("Max retries reached")
 
     def log_stats(self):
         logger.info('%s' % self.proxies)
